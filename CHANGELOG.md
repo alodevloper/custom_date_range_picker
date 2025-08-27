@@ -41,3 +41,23 @@ Updated the Readme.md file, and added more documentation
 ## 1.1.0
 
 Updated the intl version
+
+## 1.2.0
+
+### Features
+- Upgraded dependencies to latest versions (intl ^0.20.2, flutter_lints ^6.0.0)
+- Extended SDK compatibility to support Flutter 4.x
+- Enhanced package metadata with repository, issue tracker, and documentation URLs
+- Added relevant topics for better discoverability
+
+### Code Quality
+- Modernized code to use super.key pattern instead of Key? key
+- Fixed all deprecated withOpacity() calls to use withValues(alpha:)
+- Resolved all static analysis issues (8 warnings fixed)
+- Achieved zero dart analyze issues
+- Updated example project with same quality standards
+
+### Improvements
+- Better pub.dev scoring through improved metadata and code quality
+- Enhanced package description for better discoverability
+- Consistent formatting across all Dart files
