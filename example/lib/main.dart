@@ -7,7 +7,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -47,8 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Material(
           color: Colors.transparent,
           child: Padding(
-            padding:
-                const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+            padding: const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -56,10 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: <Widget>[
                   const Text(
                     'Choose a date Range',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 20,
-                        color: Colors.black),
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20, color: Colors.black),
                   ),
                   const SizedBox(height: 20),
                   Text(
