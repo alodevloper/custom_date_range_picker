@@ -61,7 +61,7 @@ class CustomCalendarState extends State<CustomCalendar> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      textDirection: isArabic ? TextDirection.RTL : TextDirection.LTR,
       child: Column(
         children: <Widget>[
           Padding(
