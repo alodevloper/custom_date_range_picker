@@ -12,8 +12,6 @@ class CustomDateRangePicker extends StatefulWidget {
   final Color backgroundColor;
   final Function(DateTime, DateTime) onApplyClick;
   final Function() onCancelClick;
-
-  /// Added locale field
   final String locale;
 
   const CustomDateRangePicker({
@@ -27,7 +25,7 @@ class CustomDateRangePicker extends StatefulWidget {
     required this.minimumDate,
     required this.maximumDate,
     required this.onCancelClick,
-    this.locale = 'en', // default to English
+    this.locale = 'en',
   });
 
   @override
@@ -65,7 +63,6 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
 
   @override
   Widget build(BuildContext context) {
-    // Localized labels
     final fromLabel = isArabic ? 'من' : 'From';
     final toLabel = isArabic ? 'إلى' : 'To';
     final applyLabel = isArabic ? 'تطبيق' : 'Apply';
@@ -95,7 +92,7 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                     borderRadius: const BorderRadius.all(Radius.circular(24.0)),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.2),
+                        color: Colors.grey.withOpacity(0.2),
                         offset: const Offset(4, 4),
                         blurRadius: 8.0,
                       ),
@@ -177,8 +174,9 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                         CustomCalendar(
                           minimumDate: widget.minimumDate,
                           maximumDate: widget.maximumDate,
-                          initialEndDate: widget.initialEndDate,
-                          initialStartDate: widget.initialStartDate,
+                          // FIX: Pass the state variables, not the initial widget properties
+                          initialEndDate: endDate,
+                          initialStartDate: startDate,
                           primaryColor: widget.primaryColor,
                           locale: widget.locale,
                           startEndDateChange:
@@ -195,12 +193,8 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                           child: Row(
                             children: [
                               Expanded(
-                                child: Container(
+                                child: SizedBox(
                                   height: 48,
-                                  decoration: const BoxDecoration(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(24.0)),
-                                  ),
                                   child: OutlinedButton(
                                     style: ButtonStyle(
                                       side: WidgetStateProperty.all(BorderSide(
@@ -212,7 +206,7 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                                         ),
                                       ),
                                       backgroundColor: WidgetStateProperty.all(
-                                          widget.primaryColor),
+                                          Colors.transparent),
                                     ),
                                     onPressed: () {
                                       widget.onCancelClick();
@@ -221,10 +215,10 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                                     child: Center(
                                       child: Text(
                                         cancelLabel,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 18,
-                                          color: Colors.white,
+                                          color: widget.primaryColor,
                                         ),
                                       ),
                                     ),
@@ -233,16 +227,10 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                               ),
                               const SizedBox(width: 16),
                               Expanded(
-                                child: Container(
+                                child: SizedBox(
                                   height: 48,
-                                  decoration: const BoxDecoration(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(24.0)),
-                                  ),
                                   child: OutlinedButton(
                                     style: ButtonStyle(
-                                      side: WidgetStateProperty.all(BorderSide(
-                                          color: widget.primaryColor)),
                                       shape: WidgetStateProperty.all(
                                         const RoundedRectangleBorder(
                                           borderRadius: BorderRadius.all(

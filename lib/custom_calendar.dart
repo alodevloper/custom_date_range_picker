@@ -7,9 +7,7 @@ class CustomCalendar extends StatefulWidget {
   final DateTime? initialStartDate;
   final DateTime? initialEndDate;
   final Color primaryColor;
-  final Function(DateTime, DateTime)? startEndDateChange;
-
-  /// Added locale field
+  final Function(DateTime startDate, DateTime endDate)? startEndDateChange;
   final String locale;
 
   const CustomCalendar({
@@ -20,7 +18,7 @@ class CustomCalendar extends StatefulWidget {
     this.minimumDate,
     this.maximumDate,
     required this.primaryColor,
-    this.locale = 'en', // default English
+    this.locale = 'en',
   });
 
   @override
@@ -30,6 +28,8 @@ class CustomCalendar extends StatefulWidget {
 class CustomCalendarState extends State<CustomCalendar> {
   List<DateTime> dateList = <DateTime>[];
   DateTime currentMonthDate = DateTime.now();
+
+  // RE-INTRODUCE LOCAL STATE TO MANAGE INTERACTION
   DateTime? startDate;
   DateTime? endDate;
 
@@ -38,9 +38,22 @@ class CustomCalendarState extends State<CustomCalendar> {
   @override
   void initState() {
     setListOfDate(currentMonthDate);
-    if (widget.initialStartDate != null) startDate = widget.initialStartDate;
-    if (widget.initialEndDate != null) endDate = widget.initialEndDate;
+    // Initialize local state from widget properties
+    startDate = widget.initialStartDate;
+    endDate = widget.initialEndDate;
     super.initState();
+  }
+
+  // SYNC local state when parent (CustomDateRangePicker) rebuilds
+  @override
+  void didUpdateWidget(covariant CustomCalendar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialStartDate != oldWidget.initialStartDate) {
+      startDate = widget.initialStartDate;
+    }
+    if (widget.initialEndDate != oldWidget.initialEndDate) {
+      endDate = widget.initialEndDate;
+    }
   }
 
   void setListOfDate(DateTime monthDate) {
@@ -205,7 +218,7 @@ class CustomCalendarState extends State<CustomCalendar> {
         decoration: BoxDecoration(
           color: startDate != null && endDate != null
               ? (getIsItStartAndEndDate(date) || getIsInRange(date))
-                  ? widget.primaryColor.withValues(alpha: 0.4)
+                  ? widget.primaryColor.withOpacity(0.4)
                   : Colors.transparent
               : Colors.transparent,
           borderRadius: BorderRadius.only(
@@ -250,7 +263,7 @@ class CustomCalendarState extends State<CustomCalendar> {
               boxShadow: getIsItStartAndEndDate(date)
                   ? [
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.6),
+                        color: Colors.grey.withOpacity(0.6),
                         blurRadius: 4,
                         offset: const Offset(0, 0),
                       ),
@@ -265,7 +278,7 @@ class CustomCalendarState extends State<CustomCalendar> {
                       ? Colors.white
                       : currentMonthDate.month == date.month
                           ? widget.primaryColor
-                          : Colors.grey.withValues(alpha: 0.6),
+                          : Colors.grey.withOpacity(0.6),
                   fontSize: MediaQuery.of(context).size.width > 360 ? 18 : 16,
                   fontWeight: getIsItStartAndEndDate(date)
                       ? FontWeight.bold
@@ -331,31 +344,53 @@ class CustomCalendarState extends State<CustomCalendar> {
       (startDate != null && _isSameDate(date, startDate!)) ||
       (endDate != null && _isSameDate(date, endDate!));
 
-  bool isStartDateRadius(DateTime date) =>
-      (startDate != null && _isSameDate(date, startDate!)) || date.weekday == 1;
-
-  bool isEndDateRadius(DateTime date) =>
-      (endDate != null && _isSameDate(date, endDate!)) || date.weekday == 7;
-
   bool _isSameDate(DateTime a, DateTime b) =>
       a.day == b.day && a.month == b.month && a.year == b.year;
+
+  // FIX: Flip the logic for Arabic (rtl) layouts
+  bool isStartDateRadius(DateTime date) {
+    // In LTR, start of the row is Monday (weekday 1).
+    // In RTL, start of the row is Sunday (weekday 7).
+    final int startDay = isArabic ? 7 : 1;
+
+    return (startDate != null && _isSameDate(date, startDate!)) ||
+        date.weekday == startDay;
+  }
+
+  // FIX: Flip the logic for Arabic (rtl) layouts
+  bool isEndDateRadius(DateTime date) {
+    // In LTR, end of the row is Sunday (weekday 7).
+    // In RTL, end of the row is Monday (weekday 1).
+    final int endDay = isArabic ? 1 : 7;
+
+    return (endDate != null && _isSameDate(date, endDate!)) ||
+        date.weekday == endDay;
+  }
 
   void onDateClick(DateTime date) {
     if (startDate == null) {
       startDate = date;
-    } else if (startDate != date && endDate == null) {
-      endDate = date;
-    } else if (_isSameDate(startDate!, date)) {
+      endDate = null;
+    } else if (endDate == null) {
+      if (_isSameDate(startDate!, date)) {
+        startDate = null; // Tapping same date clears selection
+      } else {
+        endDate = date;
+      }
+    } else if (_isSameDate(startDate!, date) || _isSameDate(endDate!, date)) {
+      // Tapping on either end clears the entire selection
       startDate = null;
-    } else if (endDate != null && _isSameDate(endDate!, date)) {
       endDate = null;
+    } else if (date.isBefore(startDate!)) {
+      // Tapping before start date sets new start date
+      startDate = date;
+      endDate = null;
+    } else if (date.isAfter(endDate!)) {
+      // Tapping after end date sets new end date
+      endDate = date;
     }
 
-    if (startDate == null && endDate != null) {
-      startDate = endDate;
-      endDate = null;
-    }
-
+    // Ensure start date is before end date
     if (startDate != null && endDate != null && !endDate!.isAfter(startDate!)) {
       final temp = startDate!;
       startDate = endDate;
@@ -363,6 +398,7 @@ class CustomCalendarState extends State<CustomCalendar> {
     }
 
     setState(() {
+      // Call parent callback ONLY when both start and end are selected
       if (widget.startEndDateChange != null &&
           startDate != null &&
           endDate != null) {
