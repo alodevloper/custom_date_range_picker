@@ -72,7 +72,7 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
     final cancelLabel = isArabic ? 'إلغاء' : 'Cancel';
 
     return Directionality(
-      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      textDirection: isArabic ? TextDirection.RTL : TextDirection.LTR,
       child: Center(
         child: Scaffold(
           backgroundColor: Colors.transparent,
