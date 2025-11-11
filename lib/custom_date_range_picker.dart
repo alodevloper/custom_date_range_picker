@@ -1,6 +1,6 @@
 import 'custom_calendar.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' as intl;
 
 class CustomDateRangePicker extends StatefulWidget {
   final DateTime minimumDate;
@@ -44,8 +44,8 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
 
   @override
   void initState() {
-    animationController =
-        AnimationController(duration: const Duration(milliseconds: 400), vsync: this);
+    animationController = AnimationController(
+        duration: const Duration(milliseconds: 400), vsync: this);
     startDate = widget.initialStartDate;
     endDate = widget.initialEndDate;
     animationController?.forward();
@@ -59,7 +59,7 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
   }
 
   String formatDate(DateTime date) {
-    final format = DateFormat('EEE, dd MMM', widget.locale);
+    final format = intl.DateFormat('EEE, dd MMM', widget.locale);
     return format.format(date);
   }
 
@@ -72,7 +72,7 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
     final cancelLabel = isArabic ? 'إلغاء' : 'Cancel';
 
     return Directionality(
-      textDirection: isArabic ? TextDirection.RTL : TextDirection.LTR,
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Center(
         child: Scaffold(
           backgroundColor: Colors.transparent,
@@ -180,6 +180,7 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                           initialEndDate: widget.initialEndDate,
                           initialStartDate: widget.initialStartDate,
                           primaryColor: widget.primaryColor,
+                          locale: widget.locale,
                           startEndDateChange:
                               (DateTime startDateData, DateTime endDateData) {
                             setState(() {
@@ -202,8 +203,8 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                                   ),
                                   child: OutlinedButton(
                                     style: ButtonStyle(
-                                      side: WidgetStateProperty.all(
-                                          BorderSide(color: widget.primaryColor)),
+                                      side: WidgetStateProperty.all(BorderSide(
+                                          color: widget.primaryColor)),
                                       shape: WidgetStateProperty.all(
                                         const RoundedRectangleBorder(
                                           borderRadius: BorderRadius.all(
@@ -240,8 +241,8 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                                   ),
                                   child: OutlinedButton(
                                     style: ButtonStyle(
-                                      side: WidgetStateProperty.all(
-                                          BorderSide(color: widget.primaryColor)),
+                                      side: WidgetStateProperty.all(BorderSide(
+                                          color: widget.primaryColor)),
                                       shape: WidgetStateProperty.all(
                                         const RoundedRectangleBorder(
                                           borderRadius: BorderRadius.all(
@@ -252,8 +253,10 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                                           widget.primaryColor),
                                     ),
                                     onPressed: () {
-                                      if (startDate != null && endDate != null) {
-                                        widget.onApplyClick(startDate!, endDate!);
+                                      if (startDate != null &&
+                                          endDate != null) {
+                                        widget.onApplyClick(
+                                            startDate!, endDate!);
                                         Navigator.pop(context);
                                       }
                                     },

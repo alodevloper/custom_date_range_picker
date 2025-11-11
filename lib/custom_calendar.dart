@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' as intl;
 
 class CustomCalendar extends StatefulWidget {
   final DateTime? minimumDate;
@@ -61,7 +61,7 @@ class CustomCalendarState extends State<CustomCalendar> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: isArabic ? TextDirection.RTL : TextDirection.LTR,
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Column(
         children: <Widget>[
           Padding(
@@ -71,11 +71,13 @@ class CustomCalendarState extends State<CustomCalendar> {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: _arrowButton(
-                    Icons.keyboard_arrow_left,
+                    isArabic
+                        ? Icons.keyboard_arrow_right
+                        : Icons.keyboard_arrow_left,
                     onTap: () {
                       setState(() {
-                        currentMonthDate =
-                            DateTime(currentMonthDate.year, currentMonthDate.month, 0);
+                        currentMonthDate = DateTime(
+                            currentMonthDate.year, currentMonthDate.month, 0);
                         setListOfDate(currentMonthDate);
                       });
                     },
@@ -84,7 +86,8 @@ class CustomCalendarState extends State<CustomCalendar> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      DateFormat('MMMM, yyyy', widget.locale).format(currentMonthDate),
+                      intl.DateFormat('MMMM, yyyy', widget.locale)
+                          .format(currentMonthDate),
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 20,
@@ -96,11 +99,13 @@ class CustomCalendarState extends State<CustomCalendar> {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: _arrowButton(
-                    Icons.keyboard_arrow_right,
+                    isArabic
+                        ? Icons.keyboard_arrow_left
+                        : Icons.keyboard_arrow_right,
                     onTap: () {
                       setState(() {
-                        currentMonthDate =
-                            DateTime(currentMonthDate.year, currentMonthDate.month + 2, 0);
+                        currentMonthDate = DateTime(currentMonthDate.year,
+                            currentMonthDate.month + 2, 0);
                         setListOfDate(currentMonthDate);
                       });
                     },
@@ -148,7 +153,7 @@ class CustomCalendarState extends State<CustomCalendar> {
         Expanded(
           child: Center(
             child: Text(
-              DateFormat('EEE', widget.locale).format(dateList[i]),
+              intl.DateFormat('EEE', widget.locale).format(dateList[i]),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -204,14 +209,18 @@ class CustomCalendarState extends State<CustomCalendar> {
                   : Colors.transparent
               : Colors.transparent,
           borderRadius: BorderRadius.only(
-            bottomLeft:
-                isStartDateRadius(date) ? const Radius.circular(24.0) : Radius.zero,
-            topLeft:
-                isStartDateRadius(date) ? const Radius.circular(24.0) : Radius.zero,
-            topRight:
-                isEndDateRadius(date) ? const Radius.circular(24.0) : Radius.zero,
-            bottomRight:
-                isEndDateRadius(date) ? const Radius.circular(24.0) : Radius.zero,
+            bottomLeft: isStartDateRadius(date)
+                ? const Radius.circular(24.0)
+                : Radius.zero,
+            topLeft: isStartDateRadius(date)
+                ? const Radius.circular(24.0)
+                : Radius.zero,
+            topRight: isEndDateRadius(date)
+                ? const Radius.circular(24.0)
+                : Radius.zero,
+            bottomRight: isEndDateRadius(date)
+                ? const Radius.circular(24.0)
+                : Radius.zero,
           ),
         ),
       ),
@@ -257,8 +266,7 @@ class CustomCalendarState extends State<CustomCalendar> {
                       : currentMonthDate.month == date.month
                           ? widget.primaryColor
                           : Colors.grey.withValues(alpha: 0.6),
-                  fontSize:
-                      MediaQuery.of(context).size.width > 360 ? 18 : 16,
+                  fontSize: MediaQuery.of(context).size.width > 360 ? 18 : 16,
                   fontWeight: getIsItStartAndEndDate(date)
                       ? FontWeight.bold
                       : FontWeight.normal,
@@ -305,7 +313,8 @@ class CustomCalendarState extends State<CustomCalendar> {
       final maxDate = widget.maximumDate!.add(const Duration(days: 1));
       return date.isAfter(minDate) && date.isBefore(maxDate);
     } else if (widget.minimumDate != null) {
-      return date.isAfter(widget.minimumDate!.subtract(const Duration(days: 1)));
+      return date
+          .isAfter(widget.minimumDate!.subtract(const Duration(days: 1)));
     } else if (widget.maximumDate != null) {
       return date.isBefore(widget.maximumDate!.add(const Duration(days: 1)));
     }
@@ -313,7 +322,10 @@ class CustomCalendarState extends State<CustomCalendar> {
   }
 
   bool getIsInRange(DateTime date) =>
-      startDate != null && endDate != null && date.isAfter(startDate!) && date.isBefore(endDate!);
+      startDate != null &&
+      endDate != null &&
+      date.isAfter(startDate!) &&
+      date.isBefore(endDate!);
 
   bool getIsItStartAndEndDate(DateTime date) =>
       (startDate != null && _isSameDate(date, startDate!)) ||
@@ -351,37 +363,11 @@ class CustomCalendarState extends State<CustomCalendar> {
     }
 
     setState(() {
-      if (widget.startEndDateChange != null && startDate != null && endDate != null) {
+      if (widget.startEndDateChange != null &&
+          startDate != null &&
+          endDate != null) {
         widget.startEndDateChange!(startDate!, endDate!);
       }
     });
   }
-}
-
-
-/// Helper function to show the calendar picker
-Future<void> showCustomCalendarPicker({
-  required BuildContext context,
-  DateTime? initialStartDate,
-  DateTime? initialEndDate,
-  DateTime? minimumDate,
-  DateTime? maximumDate,
-  required Color primaryColor,
-  String locale = 'en',
-  Function(DateTime?, DateTime?)? onApply,
-}) {
-  return showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => CustomCalendarPicker(
-      initialStartDate: initialStartDate,
-      initialEndDate: initialEndDate,
-      minimumDate: minimumDate,
-      maximumDate: maximumDate,
-      primaryColor: primaryColor,
-      locale: locale,
-      onApply: onApply,
-    ),
-  );
 }
