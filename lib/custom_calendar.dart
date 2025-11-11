@@ -1,17 +1,3 @@
-import 'package:flutter/material.dart';
-
-/// user for DateTime formatting
-import 'package:intl/intl.dart';
-
-/// `const CustomCalendar({
-///   Key? key,
-///   this.initialStartDate,
-///   this.initialEndDate,
-///   this.startEndDateChange,
-///   this.minimumDate,
-///   this.maximumDate,
-///   required this.primaryColor,
-/// })`
 class CustomCalendar extends StatefulWidget {
   /// The minimum date that can be selected on the calendar
   final DateTime? minimumDate;
@@ -31,6 +17,9 @@ class CustomCalendar extends StatefulWidget {
   /// A function to be called when the selected date range changes
   final Function(DateTime, DateTime)? startEndDateChange;
 
+  /// Locale for the calendar ('en' or 'ar')
+  final String locale;
+
   const CustomCalendar({
     super.key,
     this.initialStartDate,
@@ -39,6 +28,7 @@ class CustomCalendar extends StatefulWidget {
     this.minimumDate,
     this.maximumDate,
     required this.primaryColor,
+    this.locale = 'en',
   });
 
   @override
@@ -86,8 +76,18 @@ class CustomCalendarState extends State<CustomCalendar> {
     }
   }
 
+  String _formatMonthYear(DateTime date) {
+    if (widget.locale == 'ar') {
+      return DateFormat('MMMM yyyy', 'ar').format(date);
+    }
+    return DateFormat('MMMM, yyyy').format(date);
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Detect if the current locale is RTL
+    final bool isRTL = widget.locale == 'ar';
+
     return Column(
       children: <Widget>[
         Padding(
@@ -120,8 +120,8 @@ class CustomCalendarState extends State<CustomCalendar> {
                           setListOfDate(currentMonthDate);
                         });
                       },
-                      child: const Icon(
-                        Icons.keyboard_arrow_left,
+                      child: Icon(
+                        isRTL ? Icons.keyboard_arrow_right : Icons.keyboard_arrow_left,
                         color: Colors.grey,
                       ),
                     ),
@@ -131,12 +131,13 @@ class CustomCalendarState extends State<CustomCalendar> {
               Expanded(
                 child: Center(
                   child: Text(
-                    DateFormat('MMMM, yyyy').format(currentMonthDate),
+                    _formatMonthYear(currentMonthDate),
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       fontSize: 20,
                       color: Colors.grey.shade700,
                     ),
+                    textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
                   ),
                 ),
               ),
@@ -161,8 +162,8 @@ class CustomCalendarState extends State<CustomCalendar> {
                           setListOfDate(currentMonthDate);
                         });
                       },
-                      child: const Icon(
-                        Icons.keyboard_arrow_right,
+                      child: Icon(
+                        isRTL ? Icons.keyboard_arrow_left : Icons.keyboard_arrow_right,
                         color: Colors.grey,
                       ),
                     ),
@@ -175,28 +176,42 @@ class CustomCalendarState extends State<CustomCalendar> {
         Padding(
           padding: const EdgeInsets.only(right: 8, left: 8, bottom: 8),
           child: Row(
-            children: getDaysNameUI(),
+            children: getDaysNameUI(isRTL),
           ),
         ),
         Padding(
           padding: const EdgeInsets.only(right: 8, left: 8),
           child: Column(
-            children: getDaysNoUI(),
+            children: getDaysNoUI(isRTL),
           ),
         ),
       ],
     );
   }
 
-  List<Widget> getDaysNameUI() {
+  List<Widget> getDaysNameUI(bool isRTL) {
     final List<Widget> listUI = <Widget>[];
-    for (int i = 0; i < 7; i++) {
+    final List<int> indices = isRTL ? [6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6];
+    
+    for (int i in indices) {
+      String dayName;
+      if (widget.locale == 'ar') {
+        dayName = DateFormat('EEE', 'ar').format(dateList[i]);
+      } else {
+        dayName = DateFormat('EEE').format(dateList[i]);
+      }
+      
       listUI.add(
         Expanded(
           child: Center(
             child: Text(
-              DateFormat('EEE').format(dateList[i]),
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: widget.primaryColor),
+              dayName,
+              style: TextStyle(
+                fontSize: 16, 
+                fontWeight: FontWeight.w500, 
+                color: widget.primaryColor
+              ),
+              textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
             ),
           ),
         ),
@@ -205,13 +220,16 @@ class CustomCalendarState extends State<CustomCalendar> {
     return listUI;
   }
 
-  List<Widget> getDaysNoUI() {
+  List<Widget> getDaysNoUI(bool isRTL) {
     final List<Widget> noList = <Widget>[];
     int count = 0;
     for (int i = 0; i < dateList.length / 7; i++) {
       final List<Widget> listUI = <Widget>[];
-      for (int i = 0; i < 7; i++) {
-        final DateTime date = dateList[count];
+      final List<int> weekIndices = List.generate(7, (index) => count + index);
+      final List<int> orderedIndices = isRTL ? weekIndices.reversed.toList() : weekIndices;
+      
+      for (int idx in orderedIndices) {
+        final DateTime date = dateList[idx];
         listUI.add(
           Expanded(
             child: AspectRatio(
@@ -226,8 +244,8 @@ class CustomCalendarState extends State<CustomCalendar> {
                         padding: EdgeInsets.only(
                             top: 2,
                             bottom: 2,
-                            left: isStartDateRadius(date) ? 4 : 0,
-                            right: isEndDateRadius(date) ? 4 : 0),
+                            left: isStartDateRadius(date, isRTL) ? 4 : 0,
+                            right: isEndDateRadius(date, isRTL) ? 4 : 0),
                         child: Container(
                           decoration: BoxDecoration(
                             color: startDate != null && endDate != null
@@ -237,13 +255,13 @@ class CustomCalendarState extends State<CustomCalendar> {
                                 : Colors.transparent,
                             borderRadius: BorderRadius.only(
                               bottomLeft:
-                                  isStartDateRadius(date) ? const Radius.circular(24.0) : const Radius.circular(0.0),
+                                  isStartDateRadius(date, isRTL) ? const Radius.circular(24.0) : const Radius.circular(0.0),
                               topLeft:
-                                  isStartDateRadius(date) ? const Radius.circular(24.0) : const Radius.circular(0.0),
+                                  isStartDateRadius(date, isRTL) ? const Radius.circular(24.0) : const Radius.circular(0.0),
                               topRight:
-                                  isEndDateRadius(date) ? const Radius.circular(24.0) : const Radius.circular(0.0),
+                                  isEndDateRadius(date, isRTL) ? const Radius.circular(24.0) : const Radius.circular(0.0),
                               bottomRight:
-                                  isEndDateRadius(date) ? const Radius.circular(24.0) : const Radius.circular(0.0),
+                                  isEndDateRadius(date, isRTL) ? const Radius.circular(24.0) : const Radius.circular(0.0),
                             ),
                           ),
                         ),
@@ -340,8 +358,8 @@ class CustomCalendarState extends State<CustomCalendar> {
             ),
           ),
         );
-        count += 1;
       }
+      count += 7;
       noList.add(Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -380,20 +398,24 @@ class CustomCalendarState extends State<CustomCalendar> {
     }
   }
 
-  bool isStartDateRadius(DateTime date) {
+  bool isStartDateRadius(DateTime date, bool isRTL) {
     if (startDate != null && startDate!.day == date.day && startDate!.month == date.month) {
+      return isRTL ? false : true;
+    } else if (endDate != null && endDate!.day == date.day && endDate!.month == date.month && isRTL) {
       return true;
-    } else if (date.weekday == 1) {
+    } else if (date.weekday == (isRTL ? 7 : 1)) {
       return true;
     } else {
       return false;
     }
   }
 
-  bool isEndDateRadius(DateTime date) {
+  bool isEndDateRadius(DateTime date, bool isRTL) {
     if (endDate != null && endDate!.day == date.day && endDate!.month == date.month) {
+      return isRTL ? false : true;
+    } else if (startDate != null && startDate!.day == date.day && startDate!.month == date.month && isRTL) {
       return true;
-    } else if (date.weekday == 7) {
+    } else if (date.weekday == (isRTL ? 1 : 7)) {
       return true;
     } else {
       return false;
@@ -433,4 +455,31 @@ class CustomCalendarState extends State<CustomCalendar> {
       } catch (_) {}
     });
   }
+}
+
+/// Helper function to show the calendar picker
+Future<void> showCustomCalendarPicker({
+  required BuildContext context,
+  DateTime? initialStartDate,
+  DateTime? initialEndDate,
+  DateTime? minimumDate,
+  DateTime? maximumDate,
+  required Color primaryColor,
+  String locale = 'en',
+  Function(DateTime?, DateTime?)? onApply,
+}) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => CustomCalendarPicker(
+      initialStartDate: initialStartDate,
+      initialEndDate: initialEndDate,
+      minimumDate: minimumDate,
+      maximumDate: maximumDate,
+      primaryColor: primaryColor,
+      locale: locale,
+      onApply: onApply,
+    ),
+  );
 }
