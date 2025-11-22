@@ -29,7 +29,6 @@ class CustomCalendarState extends State<CustomCalendar> {
   List<DateTime> dateList = <DateTime>[];
   DateTime currentMonthDate = DateTime.now();
 
-  // RE-INTRODUCE LOCAL STATE TO MANAGE INTERACTION
   DateTime? startDate;
   DateTime? endDate;
 
@@ -38,13 +37,11 @@ class CustomCalendarState extends State<CustomCalendar> {
   @override
   void initState() {
     setListOfDate(currentMonthDate);
-    // Initialize local state from widget properties
     startDate = widget.initialStartDate;
     endDate = widget.initialEndDate;
     super.initState();
   }
 
-  // SYNC local state when parent (CustomDateRangePicker) rebuilds
   @override
   void didUpdateWidget(covariant CustomCalendar oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -212,31 +209,44 @@ class CustomCalendarState extends State<CustomCalendar> {
   }
 
   Widget _buildDateBackground(DateTime date) {
+    // Only show background if in range or is start/end date
+    final bool shouldShowBackground = startDate != null &&
+        endDate != null &&
+        (getIsItStartAndEndDate(date) || getIsInRange(date));
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Container(
         decoration: BoxDecoration(
-          color: startDate != null && endDate != null
-              ? (getIsItStartAndEndDate(date) || getIsInRange(date))
-                  ? widget.primaryColor.withOpacity(0.4)
-                  : Colors.transparent
+          color: shouldShowBackground
+              ? widget.primaryColor.withOpacity(0.4)
               : Colors.transparent,
-          borderRadius: BorderRadius.only(
-            bottomLeft: isStartDateRadius(date)
-                ? const Radius.circular(24.0)
-                : Radius.zero,
-            topLeft: isStartDateRadius(date)
-                ? const Radius.circular(24.0)
-                : Radius.zero,
-            topRight: isEndDateRadius(date)
-                ? const Radius.circular(24.0)
-                : Radius.zero,
-            bottomRight: isEndDateRadius(date)
-                ? const Radius.circular(24.0)
-                : Radius.zero,
-          ),
+          borderRadius: _getBorderRadius(date),
         ),
       ),
+    );
+  }
+
+  BorderRadius _getBorderRadius(DateTime date) {
+    final bool isRtl = isArabic;
+    final bool isStart = isStartDateRadius(date);
+    final bool isEnd = isEndDateRadius(date);
+
+    // No radius if not in range
+    if (!isStart && !isEnd) {
+      return BorderRadius.zero;
+    }
+
+    // For RTL (Arabic), swap left and right
+    return BorderRadius.only(
+      topLeft:
+          (isRtl ? isEnd : isStart) ? const Radius.circular(24.0) : Radius.zero,
+      bottomLeft:
+          (isRtl ? isEnd : isStart) ? const Radius.circular(24.0) : Radius.zero,
+      topRight:
+          (isRtl ? isStart : isEnd) ? const Radius.circular(24.0) : Radius.zero,
+      bottomRight:
+          (isRtl ? isStart : isEnd) ? const Radius.circular(24.0) : Radius.zero,
     );
   }
 
@@ -293,6 +303,10 @@ class CustomCalendarState extends State<CustomCalendar> {
   }
 
   Widget _buildTodayIndicator(DateTime date) {
+    final bool isToday = DateTime.now().day == date.day &&
+        DateTime.now().month == date.month &&
+        DateTime.now().year == date.year;
+
     return Positioned(
       bottom: 9,
       right: 0,
@@ -301,9 +315,7 @@ class CustomCalendarState extends State<CustomCalendar> {
         height: 6,
         width: 6,
         decoration: BoxDecoration(
-          color: DateTime.now().day == date.day &&
-                  DateTime.now().month == date.month &&
-                  DateTime.now().year == date.year
+          color: isToday
               ? getIsInRange(date)
                   ? Colors.white
                   : widget.primaryColor
@@ -347,24 +359,53 @@ class CustomCalendarState extends State<CustomCalendar> {
   bool _isSameDate(DateTime a, DateTime b) =>
       a.day == b.day && a.month == b.month && a.year == b.year;
 
-  // FIX: Flip the logic for Arabic (rtl) layouts
   bool isStartDateRadius(DateTime date) {
-    // In LTR, start of the row is Monday (weekday 1).
-    // In RTL, start of the row is Sunday (weekday 7).
-    final int startDay = isArabic ? 7 : 1;
+    // Always apply radius to the actual start date
+    if (startDate != null && _isSameDate(date, startDate!)) {
+      return true;
+    }
 
-    return (startDate != null && _isSameDate(date, startDate!)) ||
-        date.weekday == startDay;
+    // For dates in the middle of the range, check if it's the first day of a week row
+    if (getIsInRange(date)) {
+      // Find this date's position in the dateList to determine if it's at row start
+      final int index = dateList.indexWhere((d) => _isSameDate(d, date));
+      if (index == -1) return false;
+
+      // Row starts at index 0, 7, 14, 21, 28, 35 (every 7 days)
+      // In RTL, visual start is at the end of each row (6, 13, 20, 27, 34, 41)
+      if (isArabic) {
+        return (index + 1) % 7 ==
+            0; // Last position in row (visual start in RTL)
+      } else {
+        return index % 7 == 0; // First position in row (visual start in LTR)
+      }
+    }
+
+    return false;
   }
 
-  // FIX: Flip the logic for Arabic (rtl) layouts
   bool isEndDateRadius(DateTime date) {
-    // In LTR, end of the row is Sunday (weekday 7).
-    // In RTL, end of the row is Monday (weekday 1).
-    final int endDay = isArabic ? 1 : 7;
+    // Always apply radius to the actual end date
+    if (endDate != null && _isSameDate(date, endDate!)) {
+      return true;
+    }
 
-    return (endDate != null && _isSameDate(date, endDate!)) ||
-        date.weekday == endDay;
+    // For dates in the middle of the range, check if it's the last day of a week row
+    if (getIsInRange(date)) {
+      // Find this date's position in the dateList to determine if it's at row end
+      final int index = dateList.indexWhere((d) => _isSameDate(d, date));
+      if (index == -1) return false;
+
+      // In LTR, visual end is at the end of each row (6, 13, 20, 27, 34, 41)
+      // In RTL, visual end is at the start of each row (0, 7, 14, 21, 28, 35)
+      if (isArabic) {
+        return index % 7 == 0; // First position in row (visual end in RTL)
+      } else {
+        return (index + 1) % 7 == 0; // Last position in row (visual end in LTR)
+      }
+    }
+
+    return false;
   }
 
   void onDateClick(DateTime date) {
@@ -388,6 +429,10 @@ class CustomCalendarState extends State<CustomCalendar> {
     } else if (date.isAfter(endDate!)) {
       // Tapping after end date sets new end date
       endDate = date;
+    } else {
+      // Tapping inside the range - reset and start new selection
+      startDate = date;
+      endDate = null;
     }
 
     // Ensure start date is before end date
