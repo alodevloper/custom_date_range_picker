@@ -162,12 +162,15 @@ class CustomCalendarState extends State<CustomCalendar> {
       listUI.add(
         Expanded(
           child: Center(
-            child: Text(
-              intl.DateFormat('EEE', widget.locale).format(dateList[i]),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: widget.primaryColor,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                intl.DateFormat('EEE', widget.locale).format(dateList[i]),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: widget.primaryColor,
+                ),
               ),
             ),
           ),
@@ -251,6 +254,7 @@ class CustomCalendarState extends State<CustomCalendar> {
   }
 
   Widget _buildDateButton(DateTime date) {
+    final Color selectedTextColor = widget.primaryColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -266,7 +270,7 @@ class CustomCalendarState extends State<CustomCalendar> {
               borderRadius: const BorderRadius.all(Radius.circular(32.0)),
               border: Border.all(
                 color: getIsItStartAndEndDate(date)
-                    ? Colors.white
+                    ? selectedTextColor
                     : Colors.transparent,
                 width: 2,
               ),
@@ -285,9 +289,9 @@ class CustomCalendarState extends State<CustomCalendar> {
                 '${date.day}',
                 style: TextStyle(
                   color: getIsItStartAndEndDate(date)
-                      ? Colors.white
+                      ? selectedTextColor
                       : currentMonthDate.month == date.month
-                          ? widget.primaryColor
+                          ? (widget.primaryColor.computeLuminance() > 0.8 && Theme.of(context).brightness == Brightness.dark ? Colors.white : widget.primaryColor)
                           : Colors.grey.withOpacity(0.6),
                   fontSize: MediaQuery.of(context).size.width > 360 ? 18 : 16,
                   fontWeight: getIsItStartAndEndDate(date)
@@ -317,7 +321,7 @@ class CustomCalendarState extends State<CustomCalendar> {
         decoration: BoxDecoration(
           color: isToday
               ? getIsInRange(date)
-                  ? Colors.white
+                  ? (widget.primaryColor.computeLuminance() > 0.5 ? Colors.black : Colors.white)
                   : widget.primaryColor
               : Colors.transparent,
           shape: BoxShape.circle,
@@ -374,8 +378,7 @@ class CustomCalendarState extends State<CustomCalendar> {
       // Row starts at index 0, 7, 14, 21, 28, 35 (every 7 days)
       // In RTL, visual start is at the end of each row (6, 13, 20, 27, 34, 41)
       if (isArabic) {
-        return (index + 1) % 7 ==
-            0; // Last position in row (visual start in RTL)
+        return index % 7 == 0; // First position in row (visual start in RTL)
       } else {
         return index % 7 == 0; // First position in row (visual start in LTR)
       }
@@ -399,7 +402,7 @@ class CustomCalendarState extends State<CustomCalendar> {
       // In LTR, visual end is at the end of each row (6, 13, 20, 27, 34, 41)
       // In RTL, visual end is at the start of each row (0, 7, 14, 21, 28, 35)
       if (isArabic) {
-        return index % 7 == 0; // First position in row (visual end in RTL)
+        return (index + 1) % 7 == 0; // Last position in row (visual end in RTL)
       } else {
         return (index + 1) % 7 == 0; // Last position in row (visual end in LTR)
       }

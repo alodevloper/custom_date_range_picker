@@ -68,6 +68,11 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
     final applyLabel = isArabic ? 'تطبيق' : 'Apply';
     final cancelLabel = isArabic ? 'إلغاء' : 'Cancel';
 
+    final bool isDarkBackground = widget.backgroundColor.computeLuminance() < 0.5;
+    final Color labelColor = isDarkBackground ? Colors.white70 : Colors.grey.shade700;
+    final Color dateColor = isDarkBackground ? Colors.white : Colors.grey.shade800;
+    final Color applyTextColor = widget.primaryColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Center(
@@ -115,22 +120,26 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                                 children: <Widget>[
                                   Text(
                                     fromLabel,
-                                    textAlign: TextAlign.left,
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontWeight: FontWeight.w400,
                                       fontSize: 16,
-                                      color: Colors.grey.shade700,
+                                      color: labelColor,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
-                                    startDate != null
-                                        ? formatDate(startDate!)
-                                        : '--/-- ',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.grey.shade700,
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      startDate != null
+                                          ? formatDate(startDate!)
+                                          : '--/-- ',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: dateColor,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -148,21 +157,26 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                                 children: <Widget>[
                                   Text(
                                     toLabel,
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontWeight: FontWeight.w400,
                                       fontSize: 16,
-                                      color: Colors.grey.shade700,
+                                      color: labelColor,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
-                                    endDate != null
-                                        ? formatDate(endDate!)
-                                        : '--/-- ',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.grey.shade700,
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      endDate != null
+                                          ? formatDate(endDate!)
+                                          : '--/-- ',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: dateColor,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -251,10 +265,10 @@ class CustomDateRangePickerState extends State<CustomDateRangePicker>
                                     child: Center(
                                       child: Text(
                                         applyLabel,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 18,
-                                          color: Colors.white,
+                                          color: applyTextColor,
                                         ),
                                       ),
                                     ),
